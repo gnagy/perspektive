@@ -1,5 +1,7 @@
 plugins {
     kotlin("multiplatform") version "1.9.0"
+    id("org.jlleitschuh.gradle.ktlint") version "11.6.1"
+    id("com.github.ben-manes.versions") version "0.49.0"
 }
 
 group = "hu.webhejj.perspektive"
@@ -40,7 +42,6 @@ kotlin {
         else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
     }
 
-    
     sourceSets {
         val commonMain by getting
         val commonTest by getting {
