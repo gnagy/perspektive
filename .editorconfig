@@ -5,6 +5,7 @@ root = true
 # Change these settings to your own preference
 indent_style = space
 indent_size = 4
+max_line_length = 160
 
 # We recommend you to keep these unchanged
 end_of_line = lf
@@ -14,3 +15,7 @@ insert_final_newline = true
 
 [*.json]
 indent_size = 2
+
+[*.kt]
+ij_kotlin_allow_trailing_comma = true
+ij_kotlin_allow_trailing_comma_on_call_site = true

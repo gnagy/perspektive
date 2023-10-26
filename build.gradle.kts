@@ -32,7 +32,13 @@ kotlin {
                 implementation(kotlin("test"))
             }
         }
-        val jvmMain by getting
+        val jvmMain by getting {
+            dependencies {
+                implementation("org.jetbrains.kotlin:kotlin-reflect")
+                implementation("io.github.classgraph:classgraph:4.8.115")
+                implementation("net.sourceforge.plantuml:plantuml:1.2021.10")
+            }
+        }
         val jvmTest by getting
 //        val jsMain by getting
 //        val jsTest by getting
