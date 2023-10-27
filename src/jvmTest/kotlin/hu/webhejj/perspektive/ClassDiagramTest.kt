@@ -1,7 +1,8 @@
 package hu.webhejj.perspektive.hu.webhejj.perspektive
 
 import hu.webhejj.perspektive.ClassDiagram
-import hu.webhejj.perspektive.ScanConfig
+import hu.webhejj.perspektive.scan.HidePackages
+import hu.webhejj.perspektive.scan.ScanConfig
 import hu.webhejj.perspektive.uml.UmlClass
 import org.junit.jupiter.api.Test
 import java.io.File
@@ -13,7 +14,7 @@ class ClassDiagramTest {
     @Test
     fun kotlinModel() {
         val classDiagram = ClassDiagram()
-        classDiagram.scanConfig.include(Regex("kotlin\\.reflect\\.[^.]*"))
+        classDiagram.scanConfig.exclusionRules.add(HidePackages(includes = listOf("kotlin.reflect")))
         classDiagram.scanPackage("kotlin.reflect")
         classDiagram.write(File(targetDir, "kotlinModel.plantuml"))
     }
@@ -26,7 +27,7 @@ class ClassDiagramTest {
                 skipPropertes = true,
             ),
         )
-        classDiagram.scanConfig.include(Regex("kotlin\\.reflect\\.[^.]*"))
+        classDiagram.scanConfig.exclusionRules.add(HidePackages(includes = listOf("kotlin.reflect"), excludes = listOf("kotlin.reflect.jvm.internal")))
         classDiagram.scanPackage("kotlin.reflect")
         classDiagram.write(File(targetDir, "kotlinInheritance.plantuml"))
     }

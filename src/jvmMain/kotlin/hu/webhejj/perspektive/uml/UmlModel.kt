@@ -45,7 +45,7 @@ data class UmlMember(
     val parameters: List<String>,
     val isAbstract: Boolean,
     val isStatic: Boolean,
-    val cardinality: UmlCardinality
+    val cardinality: UmlCardinality,
 ) {
     enum class Kind {
         PROPERTY,

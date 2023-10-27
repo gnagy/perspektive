@@ -2,6 +2,7 @@ package hu.webhejj.perspektive
 
 import hu.webhejj.perspektive.plantuml.PlantUmlWriter
 import hu.webhejj.perspektive.plantuml.RenderingOptions
+import hu.webhejj.perspektive.scan.ScanConfig
 import hu.webhejj.perspektive.uml.UmlCardinality
 import hu.webhejj.perspektive.uml.UmlClass
 import hu.webhejj.perspektive.uml.UmlInheritance
@@ -17,6 +18,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KProperty
 import kotlin.reflect.KType
+import kotlin.reflect.full.createType
 import kotlin.reflect.full.declaredMemberFunctions
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.isSubclassOf
@@ -67,7 +69,13 @@ class ClassDiagram(
     }
 
     fun scanPackage(basePackage: String) {
-        val scanResult = ClassGraph().verbose().acceptPackages(basePackage).scan()
+        val scanResult = ClassGraph()
+            .verbose()
+            .enableClassInfo()
+            .ignoreClassVisibility()
+            .acceptPackages(basePackage)
+            .scan()
+
         scanResult.allClasses.forEach { classInfo ->
             val kClass = classInfo.loadClass().kotlin
             scanKClass(kClass)
@@ -94,10 +102,10 @@ class ClassDiagram(
             typeParameters = typeParameters.map { it.uml },
             superClasses = umlSuperClasses(),
             members =
-                declaredMemberProperties.umlProperties(isStatic = false) +
+            try { declaredMemberProperties.umlProperties(isStatic = false) } catch (e: Throwable) { listOf() } +
                 staticProperties.umlProperties(isStatic = true) +
-                declaredMemberFunctions.umlMethods(isStatic = false) +
-                staticFunctions.umlMethods(isStatic = true) +
+                try { declaredMemberFunctions.umlMethods(this, isStatic = false) } catch (e: Throwable) { listOf() } +
+                staticFunctions.umlMethods(this, isStatic = true) +
                 umlEnumValues(),
         )
     }
@@ -112,19 +120,18 @@ class ClassDiagram(
             .map { UmlInheritance(it.umlName, it.arguments.map { arg -> arg.uml }) }
     }
 
-
     private fun Iterable<KProperty<*>>.umlProperties(isStatic: Boolean): List<UmlMember> {
         return if (scanConfig.skipPropertes) {
             emptyList()
         } else {
             this.map { kProperty ->
                 scanKType(kProperty.returnType)
-                kProperty.returnType.arguments.forEach { scanKType(it.type!!) } // TODO !!
+                kProperty.returnType.arguments.mapNotNull { it.type }.forEach { scanKType(it) }
 
-                val itemType = if (safeSubclassOf(kProperty, Iterable::class)) {
-                    kProperty.returnType.arguments[0].type!! // TODO !!
+                val itemType: KType = if (safeSubclassOf(kProperty, Iterable::class)) {
+                    kProperty.returnType.arguments.getOrNull(0)?.type ?: Any::class.createType()
                 } else if (safeSubclassOf(kProperty, Map::class)) {
-                    kProperty.returnType.arguments[1].type!! // TODO !!
+                    kProperty.returnType.arguments.getOrNull(1)?.type ?: Any::class.createType()
                 } else {
                     kProperty.returnType
                 }
@@ -148,12 +155,12 @@ class ClassDiagram(
         }
     }
 
-    private fun Iterable<KFunction<*>>.umlMethods(isStatic: Boolean): List<UmlMember> {
+    private fun Iterable<KFunction<*>>.umlMethods(kClass: KClass<*>, isStatic: Boolean): List<UmlMember> {
         return if (scanConfig.skipMethods) {
             emptyList()
         } else {
             this
-                .filter { f -> scanConfig.isAllowed(f) }
+                .filter { f -> scanConfig.isAllowed(kClass, f) }
                 .map { kFunction ->
                     UmlMember(
                         kind = UmlMember.Kind.METHOD,
