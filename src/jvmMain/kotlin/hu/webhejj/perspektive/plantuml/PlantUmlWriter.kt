@@ -58,7 +58,9 @@ class PlantUmlWriter {
                 umlClass.typeParameters.joinToString(separator = ",", prefix = "<", postfix = ">") { it.name }
             }
 
-            output.println("$abstract$kind ${umlClass.name.qualified}$generics $spot {")
+            val stereotypes = if (umlClass.stereotypes.isEmpty()) "" else umlClass.stereotypes.joinToString(prefix = "<< ", postfix = " >>")
+
+            output.println("$abstract$kind ${umlClass.name.qualified}$generics $spot $stereotypes {")
 
             umlClass.properties
                 .filter { prop -> classDiagram.umlClasses.none { it.name == prop.type } }

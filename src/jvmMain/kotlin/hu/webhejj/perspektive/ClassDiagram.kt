@@ -82,11 +82,21 @@ class ClassDiagram(
                 else -> UmlClass.Kind.CLASS
             },
             isAbstract = isAbstract,
+            stereotypes =
+            stereotype("open", isOpen) +
+                stereotype("sealed", isSealed) +
+                stereotype("companion", isCompanion) +
+                stereotype("functional", isFun) +
+                stereotype("value", isFun),
             typeParameters = typeParameters.map { it.uml },
             superClasses = umlSuperClasses(),
             properties = declaredMemberProperties.map { it.umlProperty() } + umlEnumValues(),
             methods = umlMethods(),
         )
+    }
+
+    private fun stereotype(name: String, present: Boolean): List<String> {
+        return if (present) listOf(name) else listOf()
     }
 
     private fun KClass<*>.umlSuperClasses(): List<UmlInheritance> {

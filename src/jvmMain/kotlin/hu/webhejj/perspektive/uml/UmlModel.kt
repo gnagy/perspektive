@@ -4,6 +4,7 @@ data class UmlClass(
     val name: UmlName,
     val kind: Kind,
     val isAbstract: Boolean,
+    val stereotypes: List<String>,
     val typeParameters: List<UmlTypeParameter>,
     val superClasses: List<UmlInheritance>,
     val properties: List<UmlProperty>,
