@@ -39,13 +39,20 @@ class PlantUmlWriter {
                 UmlClass.Kind.ENUM -> "enum"
                 UmlClass.Kind.INTERFACE -> "interface"
             }
+
+            val spot = if (umlClass.kind == UmlClass.Kind.DATA_CLASS) {
+                "<< (D,orchid) >>"
+            } else {
+                ""
+            }
+
             val generics = if (umlClass.typeParameters.isEmpty()) {
                 ""
             } else {
                 umlClass.typeParameters.joinToString(separator = ",", prefix = "<", postfix = ">") { it.name }
             }
 
-            output.println("$kind ${umlClass.name.qualified}$generics {")
+            output.println("$kind ${umlClass.name.qualified}$generics $spot {")
 
             umlClass.properties
                 .filter { prop -> classDiagram.umlClasses.none { it.name == prop.type } }
