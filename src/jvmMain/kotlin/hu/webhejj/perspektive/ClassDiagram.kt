@@ -90,7 +90,7 @@ class ClassDiagram(
                 stereotype("value", isFun),
             typeParameters = typeParameters.map { it.uml },
             superClasses = umlSuperClasses(),
-            properties = declaredMemberProperties.map { it.umlProperty() } + umlEnumValues(),
+            properties = umlProperties(),
             methods = umlMethods(),
         )
     }
@@ -144,20 +144,32 @@ class ClassDiagram(
         cardinality = cardinality,
     )
 
+    private fun KClass<*>.umlProperties(): List<UmlProperty> {
+        return if (scanConfig.skipPropertes) {
+            emptyList()
+        } else {
+            declaredMemberProperties.map { it.umlProperty() } + umlEnumValues()
+        }
+    }
+
     private fun KClass<*>.umlMethods(): List<UmlMethod> {
-        return declaredMemberFunctions
-            .filter { f -> scanConfig.isAllowed(f) || !this.isData }
-            .map { kFunction ->
-                UmlMethod(
-                    visibility = kFunction.visibility.uml,
-                    name = kFunction.name,
-                    returnType = kFunction.returnType.umlName,
-                    returnTypeProjections = kFunction.returnType.arguments.map { it.uml },
-                    // dropping first method parameter (`this` reference)
-                    parameters = kFunction.parameters.drop(1).map { it.name ?: "" },
-                    isAbstract = kFunction.isAbstract,
-                )
-            }
+        return if (scanConfig.skipMethods) {
+            emptyList()
+        } else {
+            declaredMemberFunctions
+                .filter { f -> scanConfig.isAllowed(f) || !this.isData }
+                .map { kFunction ->
+                    UmlMethod(
+                        visibility = kFunction.visibility.uml,
+                        name = kFunction.name,
+                        returnType = kFunction.returnType.umlName,
+                        returnTypeProjections = kFunction.returnType.arguments.map { it.uml },
+                        // dropping first method parameter (`this` reference)
+                        parameters = kFunction.parameters.drop(1).map { it.name ?: "" },
+                        isAbstract = kFunction.isAbstract,
+                    )
+                }
+        }
     }
 
     private fun safeSubclassOf(kProperty: KProperty<*>, base: KClass<*>): Boolean {

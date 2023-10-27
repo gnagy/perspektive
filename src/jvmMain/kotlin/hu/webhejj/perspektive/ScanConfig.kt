@@ -4,9 +4,11 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
 
-class ScanConfig {
-
-    val scanWhitelist: MutableList<(KClass<*>) -> Boolean> = mutableListOf()
+class ScanConfig(
+    val skipPropertes: Boolean = false,
+    val skipMethods: Boolean = false,
+    val scanWhitelist: MutableList<(KClass<*>) -> Boolean> = mutableListOf(),
+) {
 
     val scanBlacklist: MutableList<(KClass<*>) -> Boolean> = mutableListOf(
         { c: KClass<*> -> c.qualifiedName?.startsWith("kotlin.") ?: false },
