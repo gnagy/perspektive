@@ -8,6 +8,7 @@ import hu.webhejj.perspektive.uml.UmlInheritance
 import hu.webhejj.perspektive.uml.UmlMethod
 import hu.webhejj.perspektive.uml.UmlName
 import hu.webhejj.perspektive.uml.UmlProperty
+import hu.webhejj.perspektive.uml.UmlVisibility
 import hu.webhejj.perspektive.uml.uml
 import hu.webhejj.perspektive.uml.umlName
 import io.github.classgraph.ClassGraph
@@ -80,6 +81,7 @@ class ClassDiagram(
                 isSubclassOf(Enum::class) -> UmlClass.Kind.ENUM
                 else -> UmlClass.Kind.CLASS
             },
+            isAbstract = isAbstract,
             typeParameters = typeParameters.map { it.uml },
             superClasses = umlSuperClasses(),
             properties = declaredMemberProperties.map { it.umlProperty() } + umlEnumValues(),
@@ -96,7 +98,7 @@ class ClassDiagram(
     private fun KClass<*>.umlEnumValues(): List<UmlProperty> {
         return if (isSubclassOf(Enum::class) && java.enumConstants != null) {
             val values: Array<Enum<*>> = java.enumConstants as Array<Enum<*>>
-            values.map { UmlProperty(it.name, UmlName("", ""), listOf(), UmlCardinality.SCALAR) }
+            values.map { UmlProperty(UmlVisibility.PUBLIC, it.name, UmlName("", ""), false, listOf(), UmlCardinality.SCALAR) }
         } else {
             emptyList()
         }
@@ -120,12 +122,14 @@ class ClassDiagram(
         } else {
             UmlCardinality.SCALAR // TODO: vector for collections and maps
         }
-        return umlProperty(kProperty.name, itemType, cardinality)
+        return umlProperty(kProperty, itemType, cardinality)
     }
 
-    private fun umlProperty(name: String, type: KType, cardinality: UmlCardinality) = UmlProperty(
-        name = name,
+    private fun umlProperty(kProperty: KProperty<*>, type: KType, cardinality: UmlCardinality) = UmlProperty(
+        visibility = kProperty.visibility.uml,
+        name = kProperty.name,
         type = type.umlName,
+        isAbstract = kProperty.isAbstract,
         typeProjections = type.arguments.map { it.uml },
         cardinality = cardinality,
     )
@@ -141,6 +145,7 @@ class ClassDiagram(
                     returnTypeProjections = kFunction.returnType.arguments.map { it.uml },
                     // dropping first method parameter (`this` reference)
                     parameters = kFunction.parameters.drop(1).map { it.name ?: "" },
+                    isAbstract = kFunction.isAbstract,
                 )
             }
     }

@@ -34,6 +34,12 @@ class PlantUmlWriter {
         }
 
         classDiagram.umlClasses.forEach { umlClass ->
+            val abstract = if (umlClass.isAbstract && umlClass.kind in setOf(UmlClass.Kind.CLASS, UmlClass.Kind.CLASS)) {
+                "abstract "
+            } else {
+                ""
+            }
+
             val kind = when (umlClass.kind) {
                 UmlClass.Kind.CLASS, UmlClass.Kind.DATA_CLASS -> "class"
                 UmlClass.Kind.ENUM -> "enum"
@@ -52,12 +58,13 @@ class PlantUmlWriter {
                 umlClass.typeParameters.joinToString(separator = ",", prefix = "<", postfix = ">") { it.name }
             }
 
-            output.println("$kind ${umlClass.name.qualified}$generics $spot {")
+            output.println("$abstract$kind ${umlClass.name.qualified}$generics $spot {")
 
             umlClass.properties
                 .filter { prop -> classDiagram.umlClasses.none { it.name == prop.type } }
                 .forEach { prop ->
-                    output.print("    ${prop.name}: ${prop.type.simple}${genericsString(prop.typeProjections)}")
+                    val abstract = if (prop.isAbstract) "{abstract} " else ""
+                    output.print("    $abstract${prop.visibility.plantumlPrefix}${prop.name}: ${prop.type.simple}${genericsString(prop.typeProjections)}")
                     if (prop.cardinality == UmlCardinality.OPTIONAL) {
                         output.println("?")
                     } else {
@@ -67,8 +74,9 @@ class PlantUmlWriter {
 
             output.println()
             umlClass.methods.forEach {
+                val abstract = if (it.isAbstract) "{abstract} " else ""
                 val generics = genericsString(it.returnTypeProjections)
-                output.println("    ${it.visibility.plantumlPrefix}${it.name}(${it.parameters.joinToString()}): ${it.returnType.simple}$generics")
+                output.println("    $abstract${it.visibility.plantumlPrefix}${it.name}(${it.parameters.joinToString()}): ${it.returnType.simple}$generics")
             }
 
             output.println("}\n")

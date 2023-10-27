@@ -18,6 +18,11 @@ class SubClass : RootClass() {
     val subClassField = "subClassField"
 }
 
+abstract class AbstractClass {
+    abstract val abstractField: String
+    val concreteField = "concreteField"
+}
+
 data class TestDataClass(
     val simpleScalarField: String,
     val simpleListField: List<String>,

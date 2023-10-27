@@ -1,5 +1,6 @@
 package hu.webhejj.perspektive
 
+import hu.webhejj.perspektive.testmodel.AbstractClass
 import hu.webhejj.perspektive.testmodel.GenericDataClass
 import hu.webhejj.perspektive.testmodel.GenericDataClass2
 import hu.webhejj.perspektive.testmodel.ListContainer
@@ -39,5 +40,12 @@ class TestModelTest {
         val classDiagram = ClassDiagram()
         classDiagram.scanKClass(MapContainer::class)
         classDiagram.write(File(targetDir, "testMapFields.plantuml"))
+    }
+
+    @Test
+    fun testAbstractClass() {
+        val classDiagram = ClassDiagram()
+        classDiagram.scanKClass(AbstractClass::class)
+        classDiagram.write(File(targetDir, "testAbstractClass.plantuml"))
     }
 }

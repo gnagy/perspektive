@@ -3,6 +3,7 @@ package hu.webhejj.perspektive.uml
 data class UmlClass(
     val name: UmlName,
     val kind: Kind,
+    val isAbstract: Boolean,
     val typeParameters: List<UmlTypeParameter>,
     val superClasses: List<UmlInheritance>,
     val properties: List<UmlProperty>,
@@ -36,8 +37,10 @@ data class UmlName(
 )
 
 data class UmlProperty(
+    val visibility: UmlVisibility?,
     val name: String,
     val type: UmlName,
+    val isAbstract: Boolean,
     val typeProjections: List<UmlTypeProjection>,
     val cardinality: UmlCardinality,
 )
@@ -48,6 +51,7 @@ data class UmlMethod(
     val returnType: UmlName,
     val returnTypeProjections: List<UmlTypeProjection>,
     val parameters: List<String>,
+    val isAbstract: Boolean,
 )
 
 enum class UmlVisibility {
