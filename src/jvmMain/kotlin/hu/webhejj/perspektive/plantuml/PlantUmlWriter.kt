@@ -3,6 +3,7 @@ package hu.webhejj.perspektive.plantuml
 import hu.webhejj.perspektive.ClassDiagram
 import hu.webhejj.perspektive.uml.UmlCardinality
 import hu.webhejj.perspektive.uml.UmlClass
+import hu.webhejj.perspektive.uml.UmlMember
 import hu.webhejj.perspektive.uml.UmlTypeProjection
 import hu.webhejj.perspektive.uml.UmlVisibility
 import net.sourceforge.plantuml.FileFormat
@@ -62,11 +63,13 @@ class PlantUmlWriter {
 
             output.println("$abstract$kind ${umlClass.name.qualified}$generics $spot $stereotypes {")
 
-            umlClass.properties
+            umlClass.members
+                .filter { it.kind == UmlMember.Kind.PROPERTY }
                 .filter { prop -> classDiagram.umlClasses.none { it.name == prop.type } }
                 .forEach { prop ->
                     val abstract = if (prop.isAbstract) "{abstract} " else ""
-                    output.print("    $abstract${prop.visibility.plantumlPrefix}${prop.name}: ${prop.type.simple}${genericsString(prop.typeProjections)}")
+                    val static = if (prop.isStatic) "{static} " else ""
+                    output.print("    $abstract$static${prop.visibility.plantumlPrefix}${prop.name}: ${prop.type.simple}${genericsString(prop.typeProjections)}")
                     if (prop.cardinality == UmlCardinality.OPTIONAL) {
                         output.println("?")
                     } else {
@@ -74,12 +77,21 @@ class PlantUmlWriter {
                     }
                 }
 
+            umlClass.members
+                .filter { it.kind == UmlMember.Kind.ENUM_VALUE }
+                .forEach {
+                    output.println("    ${it.name}")
+                }
+
             output.println()
-            umlClass.methods.forEach {
-                val abstract = if (it.isAbstract) "{abstract} " else ""
-                val generics = genericsString(it.returnTypeProjections)
-                output.println("    $abstract${it.visibility.plantumlPrefix}${it.name}(${it.parameters.joinToString()}): ${it.returnType.simple}$generics")
-            }
+            umlClass.members
+                .filter { it.kind == UmlMember.Kind.METHOD }
+                .forEach {
+                    val abstract = if (it.isAbstract) "{abstract} " else ""
+                    val static = if (it.isStatic) "{static} " else ""
+                    val generics = genericsString(it.typeProjections)
+                    output.println("    $abstract$static${it.visibility.plantumlPrefix}${it.name}(${it.parameters.joinToString()}): ${it.type.simple}$generics")
+                }
 
             output.println("}\n")
 
@@ -94,7 +106,8 @@ class PlantUmlWriter {
                 output.println("${it.type.qualified} <|-- ${umlClass.name.qualified}$genericsString")
             }
 
-            umlClass.properties
+            umlClass.members
+                .filter { it.kind == UmlMember.Kind.PROPERTY }
                 .filter { prop -> classDiagram.umlClasses.any { it.name == prop.type } }
                 .forEach { prop ->
                     val cardinality = when (prop.cardinality) {
@@ -102,8 +115,9 @@ class PlantUmlWriter {
                         UmlCardinality.SCALAR -> "\"1\""
                         UmlCardinality.VECTOR -> "\"*\""
                     }
+                    val static = if (prop.isStatic) "<< static >> " else ""
                     val generics = genericsString(prop.typeProjections, true)
-                    output.println("${umlClass.name.qualified} o-- $cardinality ${prop.type.qualified}: ${prop.name}$generics")
+                    output.println("${umlClass.name.qualified} o-- $cardinality ${prop.type.qualified}: $static ${prop.name}$generics")
                 }
 
             output.println()

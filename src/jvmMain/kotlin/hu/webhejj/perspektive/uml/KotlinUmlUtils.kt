@@ -29,3 +29,6 @@ val KVisibility?.uml: UmlVisibility? get() = when (this) {
     KVisibility.INTERNAL -> UmlVisibility.INTERNAL
     null -> null
 }
+
+val KClass<*>.isKotlinClass: Boolean
+    get() = this.java.getAnnotation(Metadata::class.java)?.kind == 1

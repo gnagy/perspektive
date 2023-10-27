@@ -7,8 +7,7 @@ data class UmlClass(
     val stereotypes: List<String>,
     val typeParameters: List<UmlTypeParameter>,
     val superClasses: List<UmlInheritance>,
-    val properties: List<UmlProperty>,
-    val methods: List<UmlMethod>,
+    val members: List<UmlMember>,
 ) {
     enum class Kind {
         INTERFACE,
@@ -37,23 +36,23 @@ data class UmlName(
     val simple: String,
 )
 
-data class UmlProperty(
+data class UmlMember(
+    val kind: UmlMember.Kind,
     val visibility: UmlVisibility?,
     val name: String,
     val type: UmlName,
-    val isAbstract: Boolean,
     val typeProjections: List<UmlTypeProjection>,
-    val cardinality: UmlCardinality,
-)
-
-data class UmlMethod(
-    val visibility: UmlVisibility?,
-    val name: String,
-    val returnType: UmlName,
-    val returnTypeProjections: List<UmlTypeProjection>,
     val parameters: List<String>,
     val isAbstract: Boolean,
-)
+    val isStatic: Boolean,
+    val cardinality: UmlCardinality
+) {
+    enum class Kind {
+        PROPERTY,
+        METHOD,
+        ENUM_VALUE,
+    }
+}
 
 enum class UmlVisibility {
     PRIVATE,
