@@ -59,6 +59,7 @@ enum class UmlVisibility {
     PRIVATE,
     PROTECTED,
     PUBLIC,
+    INTERNAL,
 }
 
 enum class UmlCardinality {

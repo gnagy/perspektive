@@ -9,6 +9,10 @@ open class RootClass {
         val field = "value"
     }
 
+    private val privateField = "privateField"
+    protected val protectedField = "protectedField"
+    internal val internalField = "protectedField"
+
     fun testFunction(argument: Int): String {
         return "test $argument"
     }

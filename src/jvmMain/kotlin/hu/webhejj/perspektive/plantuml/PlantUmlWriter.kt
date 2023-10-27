@@ -146,6 +146,7 @@ class PlantUmlWriter {
             UmlVisibility.PUBLIC -> "+"
             UmlVisibility.PROTECTED -> "#"
             UmlVisibility.PRIVATE -> "-"
+            UmlVisibility.INTERNAL -> "~"
             null -> ""
         }
 }

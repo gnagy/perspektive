@@ -25,6 +25,7 @@ val KTypeProjection.uml: UmlTypeProjection get() = UmlTypeProjection(listOf(type
 val KVisibility?.uml: UmlVisibility? get() = when (this) {
     KVisibility.PUBLIC -> UmlVisibility.PUBLIC
     KVisibility.PROTECTED -> UmlVisibility.PROTECTED
-    KVisibility.PRIVATE, KVisibility.INTERNAL -> UmlVisibility.PRIVATE
+    KVisibility.PRIVATE -> UmlVisibility.PRIVATE
+    KVisibility.INTERNAL -> UmlVisibility.INTERNAL
     null -> null
 }
