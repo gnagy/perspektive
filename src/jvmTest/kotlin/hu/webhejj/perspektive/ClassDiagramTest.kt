@@ -10,9 +10,17 @@ class ClassDiagramTest {
     private val targetDir = File("build/ktuml/")
 
     @Test
+    fun kotlinModel() {
+        val classDiagram = ClassDiagram()
+        classDiagram.scanConfig.include(Regex("kotlin\\.reflect\\.[^.]*"))
+        classDiagram.scanPackage("kotlin.reflect")
+        classDiagram.write(File(targetDir, "kotlinmodel.plantuml"))
+    }
+
+    @Test
     fun umlModel() {
         val classDiagram = ClassDiagram()
-        classDiagram.scanTypes(UmlClass::class)
+        classDiagram.scanKClass(UmlClass::class)
         classDiagram.write(File(targetDir, "umlmodel.plantuml"))
     }
 }

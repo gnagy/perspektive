@@ -5,7 +5,6 @@ import hu.webhejj.perspektive.plantuml.RenderingOptions
 import hu.webhejj.perspektive.uml.UmlCardinality
 import hu.webhejj.perspektive.uml.UmlClass
 import hu.webhejj.perspektive.uml.UmlInheritance
-import hu.webhejj.perspektive.uml.UmlMembership
 import hu.webhejj.perspektive.uml.UmlMethod
 import hu.webhejj.perspektive.uml.UmlName
 import hu.webhejj.perspektive.uml.UmlProperty
@@ -17,44 +16,50 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
 import kotlin.reflect.KType
-import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.declaredMemberFunctions
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.jvm.jvmErasure
 
 class ClassDiagram(
-    private val scanConfig: ScanConfig = ScanConfig(),
+    val scanConfig: ScanConfig = ScanConfig(),
 ) {
 
-    private val scanned = mutableSetOf<String>()
+    private val scannedQualifiedNames = mutableSetOf<String>()
     val umlClasses = mutableSetOf<UmlClass>()
 
-    fun scanTypes(kType: KType): Boolean {
+    fun scanKType(kType: KType): Boolean {
         return if (kType.classifier is KClass<*>) {
-            scanTypes(kType.classifier as KClass<*>)
+            scanKClass(kType.classifier as KClass<*>)
         } else {
+            println("Skipping KType $kType")
             false
         }
     }
 
-    fun scanTypes(kClass: KClass<*>): Boolean {
+    fun scanKClass(kClass: KClass<*>): Boolean {
         val qualifiedName = kClass.qualifiedName
-        return if (qualifiedName != null && !scanned.contains(qualifiedName) && scanConfig.isAllowed(kClass)) {
-            println("Scanning $kClass")
-            scanned.add(qualifiedName)
-            val umlClass = kClass.umlClass()
-            if (umlClass != null) {
-                umlClasses.add(umlClass)
-                kClass.supertypes.forEach { scanTypes(it) }
-                kClass.sealedSubclasses.forEach { scanTypes(it) }
-                true
+        return if (qualifiedName == null) {
+            println("Skipping local / anonymous class $kClass")
+            false
+        } else {
+            if (!scannedQualifiedNames.contains(qualifiedName) && scanConfig.isAllowed(kClass)) {
+                println("Scanning KClass $kClass")
+                scannedQualifiedNames.add(qualifiedName)
+                return try {
+                    val umlClass = kClass.umlClass()
+                    umlClasses.add(umlClass)
+                    kClass.supertypes.forEach { scanKType(it) }
+                    kClass.sealedSubclasses.forEach { scanKClass(it) }
+                    true
+                } catch (e: UnsupportedOperationException) {
+                    println("Unsupported KClass $kClass: ${e.message}")
+                    false
+                }
             } else {
+                println("Skipping KClass $kClass")
                 false
             }
-        } else {
-            println("Skipping $kClass")
-            false
         }
     }
 
@@ -62,29 +67,24 @@ class ClassDiagram(
         val scanResult = ClassGraph().verbose().acceptPackages(basePackage).scan()
         scanResult.allClasses.forEach { classInfo ->
             val kClass = classInfo.loadClass().kotlin
-            scanTypes(kClass)
+            scanKClass(kClass)
         }
     }
 
-    private fun KClass<*>.umlClass(): UmlClass? {
-        return try {
-            UmlClass(
-                name = this.umlName,
-                kind = when {
-                    java.isInterface -> UmlClass.Kind.INTERFACE
-                    isData -> UmlClass.Kind.DATA_CLASS
-                    isSubclassOf(Enum::class) -> UmlClass.Kind.ENUM
-                    else -> UmlClass.Kind.CLASS
-                },
-                typeParameters = typeParameters.map { it.uml },
-                superClasses = umlSuperClasses(),
-                properties = declaredMemberProperties.map { it.umlProperty() } + umlEnumValues(),
-                methods = umlMethods(),
-            )
-        } catch (e: UnsupportedOperationException) {
-            println("Unsupported $this: ${e.message}")
-            null
-        }
+    private fun KClass<*>.umlClass(): UmlClass {
+        return UmlClass(
+            name = this.umlName,
+            kind = when {
+                java.isInterface -> UmlClass.Kind.INTERFACE
+                isData -> UmlClass.Kind.DATA_CLASS
+                isSubclassOf(Enum::class) -> UmlClass.Kind.ENUM
+                else -> UmlClass.Kind.CLASS
+            },
+            typeParameters = typeParameters.map { it.uml },
+            superClasses = umlSuperClasses(),
+            properties = declaredMemberProperties.map { it.umlProperty() } + umlEnumValues(),
+            methods = umlMethods(),
+        )
     }
 
     private fun KClass<*>.umlSuperClasses(): List<UmlInheritance> {
@@ -94,9 +94,9 @@ class ClassDiagram(
     }
 
     private fun KClass<*>.umlEnumValues(): List<UmlProperty> {
-        return if (isSubclassOf(Enum::class)) {
+        return if (isSubclassOf(Enum::class) && java.enumConstants != null) {
             val values: Array<Enum<*>> = java.enumConstants as Array<Enum<*>>
-            values.map { UmlProperty(it.name, UmlName("", ""), listOf(), UmlMembership.FIELD, UmlCardinality.SCALAR) }
+            values.map { UmlProperty(it.name, UmlName("", ""), listOf(), UmlCardinality.SCALAR) }
         } else {
             emptyList()
         }
@@ -105,56 +105,28 @@ class ClassDiagram(
     private fun KProperty1<out Any, *>.umlProperty(): UmlProperty {
         val kProperty = this
 
-        return if (isCollection(kProperty)) {
-            val itemType: KTypeProjection = kProperty.returnType.arguments[0]
-            val typeProjections = itemType.type?.arguments?.map { it.uml } ?: emptyList()
+        scanKType(returnType)
+        kProperty.returnType.arguments.forEach { scanKType(it.type!!) } // TODO !!
 
-            scanTypes(itemType.type!!)
-
-            if (scanConfig.isAllowed(itemType.type)) {
-                // TODO: uml type parameters
-                if (kProperty.returnType.arguments.size == 1) {
-                    UmlProperty(kProperty.name, itemType.type.umlName, typeProjections, UmlMembership.RELATIONSHIP, UmlCardinality.VECTOR)
-                } else {
-                    UmlProperty("MAP??? ${kProperty.name}", itemType.type.umlName, typeProjections, UmlMembership.RELATIONSHIP, UmlCardinality.VECTOR)
-                }
-            } else {
-                umlProperty(kProperty, UmlMembership.FIELD, UmlCardinality.VECTOR)
-            }
-        } else if (scanConfig.isField(kProperty)) {
-            scanTypes(kProperty.returnType)
-            val membership = if (umlClasses.find { it.name == kProperty.returnType.umlName } == null) {
-                UmlMembership.FIELD
-            } else {
-                UmlMembership.RELATIONSHIP
-            }
-            val cardinality = if (kProperty.returnType.isMarkedNullable) {
-                UmlCardinality.OPTIONAL
-            } else {
-                UmlCardinality.SCALAR
-            }
-            umlProperty(kProperty, membership, cardinality)
+        val itemType = if (safeSubclassOf(kProperty, Iterable::class)) {
+            kProperty.returnType.arguments[0].type!! // TODO !!
+        } else if (safeSubclassOf(kProperty, Map::class)) {
+            kProperty.returnType.arguments[1].type!! // TODO !!
         } else {
-            val cardinality = if (kProperty.returnType.isMarkedNullable) {
-                UmlCardinality.OPTIONAL
-            } else {
-                UmlCardinality.SCALAR
-            }
-
-            scanTypes(kProperty.returnType)
-            if (scanConfig.isAllowed(kProperty.returnType)) {
-                umlProperty(kProperty, UmlMembership.RELATIONSHIP, cardinality)
-            } else {
-                umlProperty(kProperty, UmlMembership.FIELD, UmlCardinality.VECTOR)
-            }
+            kProperty.returnType
         }
+        val cardinality = if (itemType.isMarkedNullable) {
+            UmlCardinality.OPTIONAL
+        } else {
+            UmlCardinality.SCALAR // TODO: vector for collections and maps
+        }
+        return umlProperty(kProperty.name, itemType, cardinality)
     }
 
-    private fun umlProperty(kProperty: KProperty1<out Any, *>, membership: UmlMembership, cardinality: UmlCardinality) = UmlProperty(
-        name = kProperty.name,
-        type = kProperty.returnType.umlName,
-        typeProjections = kProperty.returnType.arguments.map { it.uml },
-        membership = membership,
+    private fun umlProperty(name: String, type: KType, cardinality: UmlCardinality) = UmlProperty(
+        name = name,
+        type = type.umlName,
+        typeProjections = type.arguments.map { it.uml },
         cardinality = cardinality,
     )
 
@@ -173,9 +145,9 @@ class ClassDiagram(
             }
     }
 
-    private fun isCollection(kProperty: KProperty<*>): Boolean {
+    private fun safeSubclassOf(kProperty: KProperty<*>, base: KClass<*>): Boolean {
         return try {
-            kProperty.returnType.jvmErasure.isSubclassOf(Iterable::class)
+            kProperty.returnType.jvmErasure.isSubclassOf(base)
         } catch (e: Throwable) {
             // kotlin.reflect.jvm.internal.KotlinReflectionInternalError
             false

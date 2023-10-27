@@ -39,7 +39,6 @@ data class UmlProperty(
     val name: String,
     val type: UmlName,
     val typeProjections: List<UmlTypeProjection>,
-    val membership: UmlMembership,
     val cardinality: UmlCardinality,
 )
 
@@ -55,11 +54,6 @@ enum class UmlVisibility {
     PRIVATE,
     PROTECTED,
     PUBLIC,
-}
-
-enum class UmlMembership {
-    FIELD,
-    RELATIONSHIP,
 }
 
 enum class UmlCardinality {

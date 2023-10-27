@@ -3,7 +3,6 @@ package hu.webhejj.perspektive.plantuml
 import hu.webhejj.perspektive.ClassDiagram
 import hu.webhejj.perspektive.uml.UmlCardinality
 import hu.webhejj.perspektive.uml.UmlClass
-import hu.webhejj.perspektive.uml.UmlMembership
 import hu.webhejj.perspektive.uml.UmlTypeProjection
 import hu.webhejj.perspektive.uml.UmlVisibility
 import net.sourceforge.plantuml.FileFormat
@@ -49,7 +48,7 @@ class PlantUmlWriter {
             output.println("$kind ${umlClass.name.qualified}$generics {")
 
             umlClass.properties
-                .filter { it.membership == UmlMembership.FIELD }
+                .filter { prop -> classDiagram.umlClasses.none { it.name == prop.type } }
                 .forEach { prop ->
                     output.print("    ${prop.name}: ${prop.type.simple}${genericsString(prop.typeProjections)}")
                     if (prop.cardinality == UmlCardinality.OPTIONAL) {
@@ -79,7 +78,7 @@ class PlantUmlWriter {
             }
 
             umlClass.properties
-                .filter { it.membership == UmlMembership.RELATIONSHIP }
+                .filter { prop -> classDiagram.umlClasses.any { it.name == prop.type } }
                 .forEach { prop ->
                     val cardinality = when (prop.cardinality) {
                         UmlCardinality.OPTIONAL -> "\"0..1\""
