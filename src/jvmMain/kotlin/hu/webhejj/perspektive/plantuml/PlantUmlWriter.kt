@@ -100,9 +100,11 @@ class PlantUmlWriter {
 
             // generic parameters
             umlClass.typeParameters.forEach { param ->
-                param.upperBounds.forEach { ub ->
-                    output.println("${umlClass.name.qualified} ..> ${ub.qualified}: <${param.name}>")
-                }
+                param.upperBounds
+                    .filter { ub -> ub.qualified != "java.lang.Object" }
+                    .forEach { ub ->
+                        output.println("${umlClass.name.qualified} ..> ${ub.qualified}: <${param.name}>")
+                    }
             }
             output.println()
         }
