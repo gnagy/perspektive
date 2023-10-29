@@ -2,6 +2,7 @@ package hu.webhejj.perspektive.scan
 
 import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
+import kotlin.reflect.full.isSubclassOf
 
 interface ExclusionRule {
     fun test(kClass: KClass<*>): RuleDecision = RuleDecision.CONTINUE
@@ -60,6 +61,17 @@ class HideDataClassMembers : ExclusionRule {
             member.name in setOf("copy", "toString", "equals", "hashCode") ||
                 member.name.matches(Regex("component[0-9][0-9]?"))
             )
+        ) {
+            RuleDecision.EXCLUDE
+        } else {
+            RuleDecision.CONTINUE
+        }
+    }
+}
+
+class HideEnumClassMembers : ExclusionRule {
+    override fun test(kClass: KClass<*>, member: KCallable<*>): RuleDecision {
+        return if (kClass.isSubclassOf(Enum::class) && member.name in setOf("valueOf", "values", "entries")
         ) {
             RuleDecision.EXCLUDE
         } else {
