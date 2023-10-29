@@ -1,7 +1,7 @@
 package hu.webhejj.perspektive
 
+import hu.webhejj.perspektive.plantuml.PlantUmlOptions
 import hu.webhejj.perspektive.plantuml.PlantUmlWriter
-import hu.webhejj.perspektive.plantuml.RenderingOptions
 import hu.webhejj.perspektive.scan.ScanConfig
 import hu.webhejj.perspektive.uml.UmlCardinality
 import hu.webhejj.perspektive.uml.UmlClass
@@ -208,11 +208,10 @@ class ClassDiagram(
         }
     }
 
-    fun write(file: File, renderingOptions: RenderingOptions = RenderingOptions()) {
-        file.parentFile.mkdirs()
+    fun renderWithPlantUml(file: File, renderingOptions: PlantUmlOptions = PlantUmlOptions()) {
         PlantUmlWriter().also {
             it.write(file, this, renderingOptions)
-            it.renderPng(file, File(file.absolutePath.removeSuffix(".plantuml") + ".png"))
+            it.renderPng(file)
         }
     }
 }

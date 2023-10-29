@@ -16,7 +16,7 @@ class ClassDiagramTest {
         val classDiagram = ClassDiagram()
         classDiagram.scanConfig.exclusionRules.add(HidePackages(includes = listOf("kotlin.reflect")))
         classDiagram.scanPackage("kotlin.reflect")
-        classDiagram.write(File(targetDir, "kotlinModel.plantuml"))
+        classDiagram.renderWithPlantUml(File(targetDir, "kotlinModel.plantuml"))
     }
 
     @Test
@@ -29,13 +29,13 @@ class ClassDiagramTest {
         )
         classDiagram.scanConfig.exclusionRules.add(HidePackages(includes = listOf("kotlin.reflect"), excludes = listOf("kotlin.reflect.jvm.internal")))
         classDiagram.scanPackage("kotlin.reflect")
-        classDiagram.write(File(targetDir, "kotlinInheritance.plantuml"))
+        classDiagram.renderWithPlantUml(File(targetDir, "kotlinInheritance.plantuml"))
     }
 
     @Test
     fun umlModel() {
         val classDiagram = ClassDiagram()
         classDiagram.scanKClass(UmlClass::class)
-        classDiagram.write(File(targetDir, "umlModel.plantuml"))
+        classDiagram.renderWithPlantUml(File(targetDir, "umlModel.plantuml"))
     }
 }

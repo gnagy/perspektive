@@ -19,41 +19,41 @@ class TestModelTest {
         val classDiagram = ClassDiagram()
         classDiagram.scanKClass(SubClass::class)
         classDiagram.scanKClass(GenericDataClass2::class)
-        classDiagram.write(File(targetDir, "testModel.plantuml"))
+        classDiagram.renderWithPlantUml(File(targetDir, "testModel.plantuml"))
     }
 
     @Test
     fun testTypeParameters() {
         val classDiagram = ClassDiagram()
         classDiagram.scanKClass(GenericDataClass::class)
-        classDiagram.write(File(targetDir, "testTypeParameters.plantuml"))
+        classDiagram.renderWithPlantUml(File(targetDir, "testTypeParameters.plantuml"))
     }
 
     @Test
     fun testListFields() {
         val classDiagram = ClassDiagram()
         classDiagram.scanKClass(ListContainer::class)
-        classDiagram.write(File(targetDir, "testListFields.plantuml"))
+        classDiagram.renderWithPlantUml(File(targetDir, "testListFields.plantuml"))
     }
 
     @Test
     fun testMapFields() {
         val classDiagram = ClassDiagram()
         classDiagram.scanKClass(MapContainer::class)
-        classDiagram.write(File(targetDir, "testMapFields.plantuml"))
+        classDiagram.renderWithPlantUml(File(targetDir, "testMapFields.plantuml"))
     }
 
     @Test
     fun testAbstractClass() {
         val classDiagram = ClassDiagram()
         classDiagram.scanKClass(AbstractClass::class)
-        classDiagram.write(File(targetDir, "testAbstractClass.plantuml"))
+        classDiagram.renderWithPlantUml(File(targetDir, "testAbstractClass.plantuml"))
     }
 
     @Test
     fun testStatic() {
         val classDiagram = ClassDiagram()
         classDiagram.scanKClass(TestJavaModel::class)
-        classDiagram.write(File(targetDir, "testStatic.plantuml"))
+        classDiagram.renderWithPlantUml(File(targetDir, "testStatic.plantuml"))
     }
 }
