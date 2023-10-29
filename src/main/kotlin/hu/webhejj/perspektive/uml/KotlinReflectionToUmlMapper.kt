@@ -42,17 +42,19 @@ class KotlinReflectionToUmlMapper {
     }
 
     fun toPropertyMember(kProperty: KProperty<*>, isStatic: Boolean): UmlMember {
-        val itemType: KType = if (safeSubclassOf(kProperty, Iterable::class)) {
+        val itemType: KType = if (safeSubclassOf(kProperty.returnType, Iterable::class)) {
             kProperty.returnType.arguments.getOrNull(0)?.type ?: Any::class.createType()
-        } else if (safeSubclassOf(kProperty, Map::class)) {
+        } else if (safeSubclassOf(kProperty.returnType, Map::class)) {
             kProperty.returnType.arguments.getOrNull(1)?.type ?: Any::class.createType()
         } else {
             kProperty.returnType
         }
         val cardinality = if (itemType.isMarkedNullable) {
             UmlCardinality.OPTIONAL
+        } else if (isJavaVectorType(kProperty.returnType)) {
+            UmlCardinality.VECTOR
         } else {
-            UmlCardinality.SCALAR // TODO: vector for collections and maps
+            UmlCardinality.SCALAR
         }
         return UmlMember(
             kind = UmlMember.Kind.PROPERTY,
@@ -67,9 +69,13 @@ class KotlinReflectionToUmlMapper {
         )
     }
 
-    private fun safeSubclassOf(kProperty: KProperty<*>, base: KClass<*>): Boolean {
+    private fun isJavaVectorType(kType: KType): Boolean {
+        return safeSubclassOf(kType, Iterable::class) || safeSubclassOf(kType, Map::class)
+    }
+
+    private fun safeSubclassOf(kType: KType, base: KClass<*>): Boolean {
         return try {
-            kProperty.returnType.jvmErasure.isSubclassOf(base)
+            kType.jvmErasure.isSubclassOf(base)
         } catch (e: Throwable) {
             // kotlin.reflect.jvm.internal.KotlinReflectionInternalError
             false
