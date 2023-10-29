@@ -1,8 +1,8 @@
 package hu.webhejj.perspektive.hu.webhejj.perspektive
 
 import hu.webhejj.perspektive.ClassDiagram
+import hu.webhejj.perspektive.scan.HideMembers
 import hu.webhejj.perspektive.scan.HidePackages
-import hu.webhejj.perspektive.scan.ScanConfig
 import hu.webhejj.perspektive.uml.UmlClass
 import org.junit.jupiter.api.Test
 import java.io.File
@@ -21,13 +21,9 @@ class ClassDiagramTest {
 
     @Test
     fun kotlinInheritance() {
-        val classDiagram = ClassDiagram(
-            scanConfig = ScanConfig(
-                skipMethods = true,
-                skipPropertes = true,
-            ),
-        )
+        val classDiagram = ClassDiagram()
         classDiagram.scanConfig.exclusionRules.add(HidePackages(includes = listOf("kotlin.reflect"), excludes = listOf("kotlin.reflect.jvm.internal")))
+        classDiagram.scanConfig.exclusionRules.add(HideMembers())
         classDiagram.scanPackage("kotlin.reflect")
         classDiagram.renderWithPlantUml(File(targetDir, "kotlinInheritance.plantuml"))
     }
