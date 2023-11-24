@@ -34,6 +34,16 @@ class PlantUmlWriter {
         }
     }
 
+    fun renderSvg(
+        plantumlFile: File,
+        pngFile: File = File(plantumlFile.absolutePath.removeSuffix(".plantuml") + ".svg"),
+    ) {
+        val reader = SourceStringReader(plantumlFile.readText())
+        pngFile.outputStream().use {
+            reader.outputImage(it, FileFormatOption(FileFormat.SVG))
+        }
+    }
+
     private fun write(
         output: PrintWriter,
         classDiagram: ClassDiagram,

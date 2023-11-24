@@ -106,7 +106,7 @@ class ClassDiagram(
     fun renderWithPlantUml(file: File, renderingOptions: PlantUmlOptions = PlantUmlOptions()) {
         PlantUmlWriter().also {
             it.write(file, this, renderingOptions)
-            it.renderPng(file)
+            it.renderSvg(file)
         }
     }
 }
