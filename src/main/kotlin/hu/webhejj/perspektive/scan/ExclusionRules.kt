@@ -15,42 +15,25 @@ enum class RuleDecision {
     CONTINUE,
 }
 
-class HideClasses(val patterns: List<Regex>) : ExclusionRule {
+class ClassRule(
+    val patterns: List<Regex>,
+    val decision: RuleDecision,
+) : ExclusionRule {
     override fun test(kClass: KClass<*>): RuleDecision {
-        return if (patterns.any { it.matches(kClass.qualifiedName!!) }) RuleDecision.EXCLUDE else RuleDecision.CONTINUE
+        return if (patterns.any { it.matches(kClass.qualifiedName!!) }) decision else RuleDecision.CONTINUE
     }
 }
 
-class HidePackages(
-    val includes: List<String> = listOf(),
-    val includesRecursive: List<String> = listOf(),
-    val excludes: List<String> = listOf(),
-    val excludesRecursive: List<String> = listOf(),
+class PackageRule(
+    val packages: List<String> = listOf(),
+    val decision: RuleDecision,
+    val recursive: Boolean = false,
 ) : ExclusionRule {
-
     override fun test(kClass: KClass<*>): RuleDecision {
-        return if (include(kClass)) {
-            RuleDecision.INCLUDE
-        } else if (exclude(kClass)) {
-            RuleDecision.EXCLUDE
+        return if (packages.any { it == kClass.java.packageName || (recursive && kClass.java.packageName.startsWith("$it.")) }) {
+            decision
         } else {
             RuleDecision.CONTINUE
-        }
-    }
-
-    fun include(kClass: KClass<*>): Boolean {
-        return includes.any {
-            it == kClass.java.packageName
-        } || includesRecursive.any {
-            it == kClass.java.packageName || kClass.java.packageName.startsWith("$it.")
-        }
-    }
-
-    fun exclude(kClass: KClass<*>): Boolean {
-        return excludes.any {
-            it == kClass.java.packageName
-        } || excludesRecursive.any {
-            it == kClass.java.packageName || kClass.java.packageName.startsWith("$it.")
         }
     }
 }
@@ -80,6 +63,6 @@ class HideEnumClassMembers : ExclusionRule {
     }
 }
 
-class HideMembers : ExclusionRule {
+class HideAllMembers : ExclusionRule {
     override fun test(kClass: KClass<*>, member: KCallable<*>): RuleDecision = RuleDecision.EXCLUDE
 }

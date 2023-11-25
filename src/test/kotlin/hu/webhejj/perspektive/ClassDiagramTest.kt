@@ -1,20 +1,21 @@
 package hu.webhejj.perspektive.hu.webhejj.perspektive
 
 import hu.webhejj.perspektive.ClassDiagram
-import hu.webhejj.perspektive.scan.HideMembers
-import hu.webhejj.perspektive.scan.HidePackages
+import hu.webhejj.perspektive.scan.HideAllMembers
+import hu.webhejj.perspektive.scan.PackageRule
+import hu.webhejj.perspektive.scan.RuleDecision
 import hu.webhejj.perspektive.uml.UmlClass
 import org.junit.jupiter.api.Test
 import java.io.File
 
 class ClassDiagramTest {
 
-    private val targetDir = File("build/ktuml/")
+    private val targetDir = File("build/perspektive/")
 
     @Test
     fun kotlinModel() {
         val classDiagram = ClassDiagram()
-        classDiagram.scanConfig.exclusionRules.add(HidePackages(includes = listOf("kotlin.reflect")))
+        classDiagram.scanConfig.exclusionRules.add(PackageRule(packages = listOf("kotlin.reflect"), decision = RuleDecision.INCLUDE))
         classDiagram.scanPackage("kotlin.reflect")
         classDiagram.renderWithPlantUml(File(targetDir, "kotlinModel.plantuml"))
     }
@@ -22,8 +23,9 @@ class ClassDiagramTest {
     @Test
     fun kotlinInheritance() {
         val classDiagram = ClassDiagram()
-        classDiagram.scanConfig.exclusionRules.add(HidePackages(includes = listOf("kotlin.reflect"), excludes = listOf("kotlin.reflect.jvm.internal")))
-        classDiagram.scanConfig.exclusionRules.add(HideMembers())
+        classDiagram.scanConfig.exclusionRules.add(PackageRule(packages = listOf("kotlin.reflect"), decision = RuleDecision.INCLUDE))
+        classDiagram.scanConfig.exclusionRules.add(PackageRule(packages = listOf("kotlin.reflect.jvm.internal"), decision = RuleDecision.EXCLUDE))
+        classDiagram.scanConfig.exclusionRules.add(HideAllMembers())
         classDiagram.scanPackage("kotlin.reflect")
         classDiagram.renderWithPlantUml(File(targetDir, "kotlinInheritance.plantuml"))
     }

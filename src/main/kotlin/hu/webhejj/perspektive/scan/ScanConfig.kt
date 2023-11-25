@@ -5,7 +5,7 @@ import kotlin.reflect.KClass
 
 class ScanConfig(
     val exclusionRules: MutableList<ExclusionRule> = mutableListOf(
-        HidePackages(excludesRecursive = listOf("java", "javax", "kotlin")),
+        PackageRule(packages = listOf("java", "javax", "kotlin"), decision = RuleDecision.EXCLUDE, recursive = true),
         HideDataClassMembers(),
         HideEnumClassMembers(),
     ),
