@@ -1,5 +1,7 @@
 plugins {
     kotlin("jvm") version "1.9.10"
+    `maven-publish`
+    signing
     id("org.jlleitschuh.gradle.ktlint") version "11.6.1"
     id("com.github.ben-manes.versions") version "0.50.0"
 }
@@ -24,4 +26,56 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            from(components["java"])
+            pom {
+                packaging = "jar"
+                name.set("perspektive")
+                description.set(project.description)
+                url.set("https://github.com/gnagy/perspektive")
+                licenses {
+                    license {
+                        name.set("The Apache License, Version 2.0")
+                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set("gnagy")
+                        name.set("Gergely Nagy")
+                        email.set("greg@webhejj.hu")
+                    }
+                }
+                scm {
+                    connection.set("scm:git:git://github.com/gnagy/perspektive.git")
+                    developerConnection.set("scm:git:ssh://github.com/gnagy/perspektive.git")
+                    url.set("https://github.com/gnagy/perspektive")
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "OSSRH"
+            url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+            credentials {
+                username = project.findProperty("ossrhUsername") as String?
+                password = project.findProperty("ossrhPassword") as String?
+            }
+        }
+    }
+}
+
+signing {
+    sign(publishing.publications["maven"])
 }
