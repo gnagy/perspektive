@@ -32,3 +32,11 @@ jobs:
         uses: gradle/gradle-build-action@v2.9.0
         with:
           arguments: build
+
+      # https://github.com/actions/upload-artifact
+      - name: Upload build reports
+        uses: actions/upload-artifact@v3
+        if: success() || failure() # run this step even if previous step failed
+        with:
+          name: build-reports
+          path: build/reports/
