@@ -45,11 +45,13 @@ class KotlinReflectionToUmlMapper {
         val itemType: KType = if (safeSubclassOf(kProperty.returnType, Iterable::class)) {
             kProperty.returnType.arguments.getOrNull(0)?.type ?: Any::class.createType()
         } else if (safeSubclassOf(kProperty.returnType, Map::class)) {
+            // TODO: handle map key types
             kProperty.returnType.arguments.getOrNull(1)?.type ?: Any::class.createType()
         } else {
             kProperty.returnType
         }
         val cardinality = if (itemType.isMarkedNullable) {
+            // TODO: handle nullabilty separately from cardinality
             UmlCardinality.OPTIONAL
         } else if (isJavaVectorType(kProperty.returnType)) {
             UmlCardinality.VECTOR
