@@ -8,6 +8,7 @@ import hu.webhejj.perspektive.uml.UmlClass
 import hu.webhejj.perspektive.uml.UmlInheritance
 import hu.webhejj.perspektive.uml.UmlMember
 import io.github.classgraph.ClassGraph
+import org.slf4j.LoggerFactory
 import java.io.File
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
@@ -22,13 +23,14 @@ class ClassDiagram(
     val scanConfig: ScanConfig = ScanConfig(),
 ) {
 
+    private val logger = LoggerFactory.getLogger(javaClass)!!
     private val mapper = KotlinReflectionToUmlMapper()
     private val scannedQualifiedNames = mutableSetOf<String>()
     val umlClasses = mutableSetOf<UmlClass>()
 
     fun scanPackage(basePackage: String) {
         val scanResult = ClassGraph()
-            .verbose()
+            // .verbose()
             .enableClassInfo()
             .ignoreClassVisibility()
             .acceptPackages(basePackage)
@@ -44,7 +46,7 @@ class ClassDiagram(
         return if (kType.classifier is KClass<*> && scanConfig.isAllowed(kType.classifier as KClass<*>)) {
             scanKClass(kType.classifier as KClass<*>)
         } else {
-            println("Skipping KType $kType")
+            logger.debug("Skipping KType $kType")
             false
         }
     }
@@ -52,11 +54,11 @@ class ClassDiagram(
     fun scanKClass(kClass: KClass<*>): Boolean {
         val qualifiedName = kClass.qualifiedName
         return if (qualifiedName == null) {
-            println("Skipping local / anonymous class $kClass")
+            logger.debug("Skipping local / anonymous class $kClass")
             false
         } else {
             if (!scannedQualifiedNames.contains(qualifiedName) && scanConfig.isAllowed(kClass)) {
-                println("Scanning KClass $kClass")
+                logger.info("Scanning KClass $kClass")
                 scannedQualifiedNames.add(qualifiedName)
                 return try {
                     val umlInheritances = scanSuperClasses(kClass)
@@ -66,11 +68,11 @@ class ClassDiagram(
                     kClass.sealedSubclasses.forEach { scanKClass(it) }
                     true
                 } catch (e: UnsupportedOperationException) {
-                    println("Unsupported KClass $kClass: ${e.message}")
+                    logger.warn("Unsupported KClass $kClass: ${e.message}")
                     false
                 }
             } else {
-                println("Skipping KClass $kClass")
+                logger.debug("Skipping KClass $kClass")
                 false
             }
         }

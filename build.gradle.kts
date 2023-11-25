@@ -1,7 +1,7 @@
 plugins {
     kotlin("jvm") version "1.9.10"
     id("org.jlleitschuh.gradle.ktlint") version "11.6.1"
-    id("com.github.ben-manes.versions") version "0.49.0"
+    id("com.github.ben-manes.versions") version "0.50.0"
 }
 
 group = "hu.webhejj.perspektive"
@@ -13,8 +13,11 @@ repositories {
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("io.github.classgraph:classgraph:4.8.115")
-    implementation("net.sourceforge.plantuml:plantuml:1.2021.10")
+    implementation("io.github.classgraph:classgraph:4.8.165")
+    implementation("net.sourceforge.plantuml:plantuml:1.2023.12")
+    implementation("org.slf4j:slf4j-api:2.0.9")
+    implementation("ch.qos.logback:logback-classic:1.4.11")
+    implementation("ch.qos.logback:logback-core:1.4.11")
     testImplementation(kotlin("test"))
 }
 
