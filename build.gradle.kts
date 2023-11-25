@@ -5,7 +5,8 @@ plugins {
 }
 
 group = "hu.webhejj.perspektive"
-version = "1.0-SNAPSHOT"
+version = "0.1.0"
+description = "Perspektive is a diagramming tool written in Kotlin"
 
 repositories {
     mavenCentral()
