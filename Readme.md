@@ -15,9 +15,13 @@ The simplest way to get started is to add Perspektive as a `test` dependency and
 you'd like to render. This keeps the
 Perspektive dependencies off your application classpath and the diagrams will be refreshed each time you run tests.
 
-For examples see the test classes in this project.
+For examples see the test classes in this project:
 
-This diagram shows the data classes that model UML class diagrams for rendering.
+- [ClassDiagramTest](src/test/kotlin/hu/webhejj/perspektive/ClassDiagramTest.kt)
+
+## Examples
+
+This diagram shows the data classes that model UML class diagrams for rendering in Perspektive.
 
 ```kotlin
 @Test
@@ -28,4 +32,12 @@ fun umlModel() {
 }
 ```
 
-![UML Model](umlmodel.png)
+![UML Model](umlModel.svg)
+
+This is a diagram of kotlin reflection classes.
+
+![UML Model](kotlinModel.svg)
+
+This is a diagram focuses just on the inheritance relationships between classes, hiding members.
+
+![UML Model](kotlinInheritance.svg)
