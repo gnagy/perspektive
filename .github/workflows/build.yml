@@ -25,10 +25,15 @@ jobs:
           distribution: 'liberica'
 
       # https://github.com/gradle/gradle-build-action
-      - name: Setup Gradle
+      - name: Gradle - setup
         uses: gradle/gradle-build-action@v2.9.0
 
-      - name: Build with Gradle
+      - name: Gradle - ktlintCheck
+        uses: gradle/gradle-build-action@v2.9.0
+        with:
+          arguments: ktlintCheck
+
+      - name: Gradle - build
         uses: gradle/gradle-build-action@v2.9.0
         with:
           arguments: build
