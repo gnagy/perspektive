@@ -90,12 +90,14 @@ class ClassDiagram(
     }
 
     private fun scanMembers(kClass: KClass<*>): List<UmlMember> {
-        return kClass.declaredMemberProperties.filter { scanConfig.isAllowed(kClass, it) }.map { scanKProperty(it, isStatic = false) } +
+        val umlMembers = kClass.declaredMemberProperties.filter { scanConfig.isAllowed(kClass, it) }.map { scanKProperty(it, isStatic = false) } +
             kClass.staticProperties.filter { scanConfig.isAllowed(kClass, it) }.map { scanKProperty(it, isStatic = true) } +
             kClass.declaredMemberFunctions.filter { scanConfig.isAllowed(kClass, it) }.map { mapper.toMethodMember(it, isStatic = false) } +
             kClass.staticFunctions.filter { scanConfig.isAllowed(kClass, it) }.map { mapper.toMethodMember(it, isStatic = true) } +
             kClass.enumValues().map { mapper.toEnumMember(it) }
         // try { kClass.declaredMemberFunctions.umlMethods(kClass, isStatic = false) } catch (e: Throwable) { listOf() } +
+
+        return collapseJavaBeanProperties(umlMembers)
     }
 
     private fun scanKProperty(kProperty: KProperty<*>, isStatic: Boolean): UmlMember {
@@ -103,6 +105,30 @@ class ClassDiagram(
         kProperty.returnType.arguments.mapNotNull { it.type }.forEach { scanKType(it) }
 
         return mapper.toPropertyMember(kProperty, isStatic = isStatic)
+    }
+
+    private fun collapseJavaBeanProperties(members: List<UmlMember>): List<UmlMember> {
+        val mutableMembers = members.toMutableList()
+        members
+            .filter { it.kind == UmlMember.Kind.PROPERTY }
+            .forEach { umlMember ->
+                val isGetterName = "is${umlMember.name.capitalize()}"
+                val getterName = "get${umlMember.name.capitalize()}"
+                val setterName = "set${umlMember.name.capitalize()}"
+                members
+                    .find { it.kind == UmlMember.Kind.METHOD && it.name in listOf(isGetterName, getterName) }
+                    ?.also {
+                        mutableMembers.remove(it)
+                        umlMember.stereotypes.add("get")
+                    }
+                members
+                    .find { it.kind == UmlMember.Kind.METHOD && it.name == setterName }
+                    ?.also {
+                        mutableMembers.remove(it)
+                        umlMember.stereotypes.add("set")
+                    }
+                }
+        return mutableMembers.toList()
     }
 
     fun renderWithPlantUml(file: File, renderingOptions: PlantUmlOptions = PlantUmlOptions()) {

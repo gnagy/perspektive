@@ -99,7 +99,7 @@ class PlantUmlWriter {
             umlClass.typeParameters.joinToString(separator = ",", prefix = "<", postfix = ">") { it.name }
         }
 
-        val stereotypes = if (umlClass.stereotypes.isEmpty()) "" else umlClass.stereotypes.joinToString(prefix = "<< ", postfix = " >>")
+        val stereotypes = stereotypesString(umlClass.stereotypes)
 
         output.println("$abstract$kind ${umlClass.name.qualified}$generics $spot $stereotypes {")
     }
@@ -109,6 +109,7 @@ class PlantUmlWriter {
         classDiagram: ClassDiagram,
         output: PrintWriter,
     ) {
+        val stereotypes = stereotypesString(umlClass.stereotypes)
         umlClass.members
             .filter { it.kind == UmlMember.Kind.PROPERTY }
             .filter { prop -> classDiagram.umlClasses.none { it.name == prop.type } }
@@ -117,10 +118,11 @@ class PlantUmlWriter {
                 val static = if (prop.isStatic) "{static} " else ""
                 output.print("    $abstract$static${prop.visibility.plantumlPrefix}${prop.name}: ${prop.type.simple}${genericsString(prop.typeProjections)}")
                 if (prop.cardinality == UmlCardinality.OPTIONAL) {
-                    output.println("?")
+                    output.print("?")
                 } else {
-                    output.println()
+                    output.print("")
                 }
+                output.println(stereotypesString(prop.stereotypes))
             }
     }
 
@@ -138,8 +140,9 @@ class PlantUmlWriter {
             .forEach {
                 val abstract = if (it.isAbstract) "{abstract} " else ""
                 val static = if (it.isStatic) "{static} " else ""
+                val returnType = if(it.type.simple == "Unit") "" else ": ${it.type.simple}"
                 val generics = genericsString(it.typeProjections)
-                output.println("    $abstract$static${it.visibility.plantumlPrefix}${it.name}(${it.parameters.joinToString()}): ${it.type.simple}$generics")
+                output.println("    $abstract$static${it.visibility.plantumlPrefix}${it.name}(${it.parameters.joinToString()})${returnType}$generics")
             }
     }
 
@@ -211,3 +214,6 @@ private val UmlVisibility?.plantumlPrefix: String
         UmlVisibility.INTERNAL -> "~"
         null -> ""
     }
+
+private fun stereotypesString(stereotypes: List<String>) =
+    if (stereotypes.isEmpty()) "" else stereotypes.joinToString(prefix = "<< ", postfix = " >>")
