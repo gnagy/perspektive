@@ -1,6 +1,6 @@
 package hu.webhejj.perspektive.testmodel;
 
-public class TestJavaModel {
+public class JavaStaticModel {
 
     public static String staticField = "staticField";
 

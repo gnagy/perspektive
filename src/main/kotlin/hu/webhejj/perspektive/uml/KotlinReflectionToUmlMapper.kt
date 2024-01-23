@@ -68,6 +68,7 @@ class KotlinReflectionToUmlMapper {
             isAbstract = kProperty.isAbstract,
             isStatic = isStatic,
             cardinality = cardinality,
+            stereotypes = mutableListOf(),
         )
     }
 
@@ -92,10 +93,11 @@ class KotlinReflectionToUmlMapper {
             type = kFunction.returnType.umlName,
             typeProjections = kFunction.returnType.arguments.map { it.uml },
             // dropping first method parameter (`this` reference)
-            parameters = kFunction.parameters.drop(1).map { it.name ?: "" },
+            parameters = kFunction.parameters.drop(1).map { it.type.umlName.simple },
             isAbstract = kFunction.isAbstract,
             isStatic = isStatic,
             cardinality = UmlCardinality.SCALAR, // TODO
+            stereotypes = mutableListOf(),
         )
     }
 
@@ -110,6 +112,7 @@ class KotlinReflectionToUmlMapper {
             isAbstract = false,
             isStatic = false,
             cardinality = UmlCardinality.SCALAR,
+            stereotypes = mutableListOf(),
         )
     }
 }

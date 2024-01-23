@@ -42,6 +42,19 @@ data class SimpleDataClass(
     val field: String,
 )
 
+
+data class ComplexDataClass(
+    val readonly: String,
+    var writable: String,
+    val nullable: String?,
+    val withDefault: String = "default",
+) {
+    fun method(): String {
+        return "function"
+    }
+}
+
+
 data class GenericDataClass<K, V : String?>(
     val key: K,
     val value: V,
